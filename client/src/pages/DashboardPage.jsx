@@ -1,0 +1,124 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { PlusCircle, DollarSign, TrendingUp, CreditCard, Bot } from 'lucide-react';
+import api from '../utils/api';
+import DebtCard from '../components/DebtCard';
+
+function SummaryCard({ icon: Icon, label, value, color }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-3 ${color}`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <p className="text-sm text-gray-500 mb-1">{label}</p>
+      <p className="text-2xl font-bold text-gray-900">{value}</p>
+    </div>
+  );
+}
+
+export default function DashboardPage() {
+  const [debts, setDebts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    api.get('/debts')
+      .then((res) => setDebts(res.data))
+      .catch(() => toast.error('Failed to load debts'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/debts/${id}`);
+      setDebts((prev) => prev.filter((d) => d._id !== id));
+      toast.success('Debt deleted');
+    } catch {
+      toast.error('Failed to delete debt');
+    }
+  };
+
+  const totalBalance = debts.reduce((s, d) => s + d.balance, 0);
+  const totalMin = debts.reduce((s, d) => s + d.minPayment, 0);
+  const highestApr = debts.length ? debts.reduce((a, b) => (a.interestRate > b.interestRate ? a : b)) : null;
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-20">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Your Debts</h1>
+          <p className="text-gray-500 text-sm mt-0.5">{debts.length} debt{debts.length !== 1 ? 's' : ''} tracked</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate('/ai')}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            <Bot className="w-4 h-4" />
+            AI Advice
+          </button>
+          <button
+            onClick={() => navigate('/debts/new')}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            <PlusCircle className="w-4 h-4" />
+            Add Debt
+          </button>
+        </div>
+      </div>
+
+      {debts.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <SummaryCard
+            icon={DollarSign}
+            label="Total Debt"
+            value={`$${totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+            color="bg-red-50 text-red-600"
+          />
+          <SummaryCard
+            icon={CreditCard}
+            label="Monthly Minimums"
+            value={`$${totalMin.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+            color="bg-orange-50 text-orange-600"
+          />
+          <SummaryCard
+            icon={TrendingUp}
+            label="Highest APR"
+            value={highestApr ? `${highestApr.interestRate}% — ${highestApr.name}` : '—'}
+            color="bg-yellow-50 text-yellow-600"
+          />
+        </div>
+      )}
+
+      {debts.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
+          <CreditCard className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-gray-700 mb-1">No debts yet</h2>
+          <p className="text-gray-500 text-sm mb-5">Add your first debt to start tracking and getting AI advice.</p>
+          <button
+            onClick={() => navigate('/debts/new')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            <PlusCircle className="w-4 h-4" />
+            Add your first debt
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {debts.map((debt) => (
+            <DebtCard key={debt._id} debt={debt} onDelete={handleDelete} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
