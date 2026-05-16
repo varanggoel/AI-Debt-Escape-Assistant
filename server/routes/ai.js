@@ -4,5 +4,7 @@ const aiController = require('../controllers/aiController');
 
 router.get('/recommendations', aiController.getRecommendations);
 router.post('/chat', aiController.chat);
+router.get('/history', aiController.getChatHistory);
+router.delete('/history', aiController.clearChatHistory);
 
 module.exports = router;

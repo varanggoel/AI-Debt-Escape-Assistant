@@ -11,6 +11,8 @@ const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/auth');
 const debtRoutes = require('./routes/debts');
 const aiRoutes = require('./routes/ai');
+const budgetRoutes = require('./routes/budget');
+const simulatorRoutes = require('./routes/simulator');
 const authMiddleware = require('./middleware/auth');
 
 const app = express();
@@ -27,9 +29,13 @@ const aiLimiter = rateLimit({
   message: { message: 'Too many AI requests. Please wait a minute.' },
 });
 
+app.get('/api/health', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
+
 app.use('/api/auth', authRoutes);
 app.use('/api/debts', authMiddleware, debtRoutes);
 app.use('/api/ai', authMiddleware, aiLimiter, aiRoutes);
+app.use('/api/budget', authMiddleware, budgetRoutes);
+app.use('/api/simulator', authMiddleware, simulatorRoutes);
 
 app.use(errorHandler);
 

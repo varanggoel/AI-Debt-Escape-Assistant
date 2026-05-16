@@ -18,7 +18,7 @@ export default function LoginPage() {
     try {
       const res = await api.post('/auth/login', form);
       await login(res.data.token);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
     } finally {
@@ -27,10 +27,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h1>
-        <p className="text-gray-500 text-sm mb-6">Sign in to your debt dashboard</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 w-full max-w-md">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Welcome back</h1>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Sign in to your debt dashboard</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
